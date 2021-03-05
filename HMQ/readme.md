@@ -32,7 +32,7 @@ where in each folder should  be order that ImageFolder dataset can read it.
 
 The running command for retraining MobileNet V1 with HMQ on ImageNet dataset for Mixed Precision allow the following bit widths [8, 7, 6, 5, 4, 3, 2] 
 ```
-python -m torch.distributed.launch --nproc_per_node=$NUM_GPU main.py --network_name mobilenet_v1 --lr_start 0.000005 --gamma 64 --lr_coefficient 0.005 --batch_size 256 --n_epochs 30 --target_compression 8.0 --fp16
+python3 -m torch.distributed.launch --nproc_per_node=$NUM_GPU main.py --network_name mobilenet_v1 --lr_start 0.000005 --gamma 64 --lr_coefficient 0.005 --batch_size 256 --n_epochs 30 --target_compression 8.0 --fp16
 ```
 
 ![VideoBlocks](images/parto_final.png) 
