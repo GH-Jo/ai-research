@@ -54,6 +54,12 @@ class ConvBN(nn.Module):
             self.bn = nn.BatchNorm2d(out_channels, eps=batch_norm_epsilon, momentum=batch_norm_momentum)
         self.q = Quantization(network_controller, is_signed=True,
                               weights_values=self.conv.weight.detach())
+    
+    def set_computation(input):
+        i = input.shape()
+        s = self.stride
+        self.computation = np.prod(self.weight.shape) # KKCC
+        self.computation *= i[2] * i[3] * (1/s)*(1/s) # HW/ss 
 
     def forward(self, x):
         """
@@ -62,6 +68,7 @@ class ConvBN(nn.Module):
         :param x: Input tensor x to be convolved
         :return: A tensor after convolution and batch normalization
         """
+        print(x.shape)
         x = self.pad_tensor(x)
         if self.network_controller.is_float_coefficient:
             return self.bn(self.conv(x))

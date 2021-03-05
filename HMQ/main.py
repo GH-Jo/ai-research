@@ -15,6 +15,7 @@ from quantization_common.quantization_instrumentation import model_coefficient_s
 
 from training.final_stage import final_stage_training
 from training.search_stage import single_iteration_training_joint
+import networks.blocks._initialize as init_net
 
 from apex import amp
 
@@ -26,9 +27,9 @@ def get_arguments():
     parser = argparse.ArgumentParser(description='HMQ Retraining for ImageNet Classification')
 
     # General
-    parser.add_argument('--log_dir', type=str, default='/data/projects/swat/users/haih/logs/',
+    parser.add_argument('--log_dir', type=str, default='/home/lkj004124/wandb_logs/',
                         help='Weights and Bias logging folder path')
-    parser.add_argument('--data_dir', type=str, default='/local_datasets/image_net/', help='Dataset folder')
+    parser.add_argument('--data_dir', type=str, default='/data/imagenet/', help='Dataset folder')
     parser.add_argument('--tag', type=str, default='', help='Tagging string')
     parser.add_argument('--num_workers', type=int, default=8, help='Number of workers for dataset reading')
     parser.add_argument('--dataset', type=str, default='ImageNet', help='Dataset name', choices=['CIFAR10', 'ImageNet'])
@@ -100,7 +101,7 @@ def base_runner():
     if cc.get('local_rank') == 0:
         wandb.init(project=PROJECT_NAME, dir=cc.get('log_dir'))
         wandb.config.update(cc)  # adds all of the arguments as config variables
-        print(f"W & B Log Dir:{wandb.wandb_dir()}")
+        #print(f"W & B Log Dir:{wandb.wandb_dir()}")
     print("-" * 100)
     #######################################
     # Setting Dataset
@@ -130,6 +131,7 @@ def base_runner():
         cc.get('n_thresholds_shifts')), quantization_part=QUANTIZATION[cc.get('quantization_part')],
         ste=cc.get('gumbel_ste'))
     net = networks.get_network_function(cc.get('network_name'))(nc, pretrained=True)
+    init_net(net, train_loader)
 
     net = update_quantization_coefficient(net)
     param_out_list, activation_scale_params, variable_scale_params = model_coefficient_split(net)

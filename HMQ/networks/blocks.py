@@ -209,3 +209,23 @@ class RepeatedInvertedResidual(nn.Module):
         :return: A tensor after RepeatedInvertedResidual
         """
         return self.blocks(x)
+
+
+def _initialize(model, loader):
+    def initialize_hook(module, input, output):
+        if isinstance(module, ConvBN)):
+            module.set_computation(output)
+
+    hooks = []
+    for name, module in model.named_modules():
+        hook = module.register_forward_hook(initialize_hook)
+        hooks.append(hook)
+
+    model.train()
+    for i, (input, target) in enumerate(loader):
+        with torch.no_grad():
+            output = model(input.cuda())
+        break
+    
+    for hook in hooks:
+        hook.remove()
