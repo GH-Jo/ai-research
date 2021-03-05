@@ -226,6 +226,6 @@ def _initialize(model, loader):
         with torch.no_grad():
             output = model(input.cuda())
         break
-    
+        
     for hook in hooks:
         hook.remove()
