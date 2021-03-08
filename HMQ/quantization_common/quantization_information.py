@@ -53,6 +53,34 @@ def calculate_expected_weight_compression(model):
     cr = torch.stack(total_max_size_coeff).sum() / torch.stack(reg_list_coeff).sum()
     return cr
 
+'''
+def calculate_expected_bitops_compression(model):
+    """
+    This function returns the expected bitops compression of the model
+    :param model: An Input PyTorch module with HMQ quantization
+    :return : A Tensor with a single value of the expected bitops compression
+    """
+    expected_computation = []
+    full_computation = []
+    bit_list_activ = [32]
+    
+    for n, m in model.named_modules():
+        if isinstance(m, layers.Quantization):
+            if m.is_activation():
+                # append bitwidth to list bit_list_activ.
+                bit_list_activ.append(m.bits_vector[0])
+            elif m.is_coefficient():
+                # take the last activ bitwidth 
+                a_bit = bit_list_activ[-1]
+                # calculate compu     tation
+m.get_expected_bits() * m.get_expected_tensor_size()
+                
+                = a_bit * 
+                expected_computation.append(b)
+    cr = torch.stack(total_full_computation).sum() / torch.stack()
+'''
+
+
 
 def get_thresholds_list(nc, model) -> list:
     """

@@ -43,6 +43,10 @@ def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, opti
         gamma_target = gamma_target_func(e)
 
         update_network_activation(nc, net, gamma_target_func_activation(e))
+        for n, m in model.named_modules():
+            if isinstance(m, layer.Quantization):
+                print(m.bits_vector)
+        exit()
         s = time.time()
 
         if e == 0:  # Measure Inital accuracy

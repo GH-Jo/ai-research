@@ -213,7 +213,7 @@ class RepeatedInvertedResidual(nn.Module):
 
 def _initialize(model, loader):
     def initialize_hook(module, input, output):
-        if isinstance(module, ConvBN)):
+        if isinstance(module, ConvBN):
             module.set_computation(output)
 
     hooks = []
