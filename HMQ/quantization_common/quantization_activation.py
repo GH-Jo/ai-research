@@ -13,7 +13,7 @@ def update_network_activation(input_nc, input_net, input_target_compression):
     float_max = max([m.tensor_size for n, m in input_net.named_modules() if
                      isinstance(m, layers.Quantization) and m.is_activation()])
 
-    for n, m in input_net.named_modules():
+    for _, m in input_net.named_modules():
         if isinstance(m, layers.Quantization) and m.is_activation():
             n_bits_list, _ = input_nc.quantization_config.get_thresholds_bitwidth_lists(m)
             n_bits = max(

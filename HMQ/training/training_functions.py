@@ -75,8 +75,6 @@ def batch_loop(net, nc, optimizers, train_loader, working_device, criterion, amp
         prefetcher = DataPreFetcher(train_loader)
         image, label = prefetcher.next()
         while image is not None:
-            if i==3: 
-                break
             if temp_func is not None:
                 t = temp_func(epoch * n + i)
                 nc.set_temperature(t)

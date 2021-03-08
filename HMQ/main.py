@@ -170,10 +170,9 @@ def base_runner():
     print("Initial thresholds", get_thresholds_list(nc, net)[0])
     nc.set_temperature(1)
     nc.enable_statistics_update()  # enable statistics collection
-    #train_acc = common.accuracy_evaluation(net, train_loader, working_device)
-    train_acc = common.accuracy_evaluation(net, test_loader, working_device)
+    train_acc = common.accuracy_evaluation(net, train_loader, working_device)
     nc.disable_statistics_update()  # disable statistics collection
-    #print("Initial Thresholds at the end of statistics update", get_thresholds_list(nc, net)[0], train_acc)
+    print("Initial Thresholds at the end of statistics update", get_thresholds_list(nc, net)[0], train_acc)
     #####################################
     # Retrain
     #####################################
