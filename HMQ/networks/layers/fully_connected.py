@@ -2,7 +2,7 @@ from torch import nn
 from torch.nn import functional as F
 from networks.layers.quantization import Quantization
 from networks.controller.network_controller import NetworkQuantizationController
-
+import numpy as np
 
 class FullyConnected(nn.Module):
     def __init__(self, network_controller: NetworkQuantizationController, in_channels, out_channels):
@@ -17,6 +17,11 @@ class FullyConnected(nn.Module):
         self.fc = nn.Linear(in_channels, out_channels)
         self.q = Quantization(network_controller, is_signed=True,
                               weights_values=self.fc.weight.detach())
+
+    def set_computation(self, input):
+        i = input[0].shape
+        print(i)
+        self.computation = np.prod(self.fc.weight.shape)
 
     def forward(self, x):
         """

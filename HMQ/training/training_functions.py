@@ -3,7 +3,7 @@ import torch
 
 from tqdm import tqdm
 from apex import amp
-from quantization_common.quantization_information import calculate_expected_weight_compression
+from quantization_common.quantization_information import calculate_expected_weight_compression, calculate_expected_bitops_compression
 from datasets.data_prefercher import DataPreFetcher
 
 
@@ -31,7 +31,8 @@ def batch_step(pbar, net, image, optimizers, label, criterion, gamma, gamma_targ
     correct, total = common.accuracy_factor(prediction,
                                             label)  # calculate accuracy factor # of correct examples
     l = criterion(prediction, label)  # loss function
-    r = calculate_expected_weight_compression(net)
+    #r = calculate_expected_weight_compression(net)
+    r = calculate_expected_bitops_compression(net)
     if gamma > 0.0:
         l = l + gamma * torch.pow(torch.relu((gamma_target - r) / gamma_target), gamma_rate)
 
@@ -74,6 +75,8 @@ def batch_loop(net, nc, optimizers, train_loader, working_device, criterion, amp
         prefetcher = DataPreFetcher(train_loader)
         image, label = prefetcher.next()
         while image is not None:
+            if i==3: 
+                break
             if temp_func is not None:
                 t = temp_func(epoch * n + i)
                 nc.set_temperature(t)

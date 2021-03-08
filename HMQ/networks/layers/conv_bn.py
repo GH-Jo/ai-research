@@ -3,6 +3,7 @@ from torch.nn import functional as F
 from networks.controller.network_controller import NetworkQuantizationController
 from networks.layers.non_linear import Identity
 from networks.layers.quantization import Quantization
+import numpy as np
 
 
 class ConvBN(nn.Module):
@@ -55,11 +56,12 @@ class ConvBN(nn.Module):
         self.q = Quantization(network_controller, is_signed=True,
                               weights_values=self.conv.weight.detach())
     
-    def set_computation(input):
-        i = input.shape()
+    def set_computation(self, input):
+        i = input[0].shape
         s = self.stride
-        self.computation = np.prod(self.weight.shape) # KKCC
-        self.computation *= i[2] * i[3] * (1/s)*(1/s) # HW/ss 
+        self.computation = np.prod(self.conv.weight.shape) # K*K*C_in*C_out
+        self.computation *= i[2] * i[3] * (1/s) * (1/s) # H_out*W_out  
+        #print(self.conv.weight.shape, i, self.stride, self.computation)
 
     def forward(self, x):
         """
@@ -68,7 +70,8 @@ class ConvBN(nn.Module):
         :param x: Input tensor x to be convolved
         :return: A tensor after convolution and batch normalization
         """
-        print(x.shape)
+        
+        #print(x.shape)
         x = self.pad_tensor(x)
         if self.network_controller.is_float_coefficient:
             return self.bn(self.conv(x))

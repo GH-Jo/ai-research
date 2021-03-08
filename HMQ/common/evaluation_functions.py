@@ -29,8 +29,14 @@ def accuracy_evaluation(input_net, dataset_loader, working_device):
     total_acc = 0
     prefetcher = DataPreFetcher(dataset_loader)
     image, label = prefetcher.next()
-    with tqdm(total=len(dataset_loader)) as pbar:
+    i = 0
+    #with tqdm(total=len(dataset_loader)) as pbar:
+    #################### DEBUGGING LINE ###################
+    with tqdm(total=2) as pbar:
+        ##################################################
         while image is not None:
+            if i >= 2: 
+                break
             pbar.update(1)
             if working_device.type == 'cuda':
                 image = image.cuda()
@@ -41,4 +47,5 @@ def accuracy_evaluation(input_net, dataset_loader, working_device):
             correct_acc += correct
             total_acc += total
             image, label = prefetcher.next()
+            i += 1 
     return 100 * correct_acc / total_acc

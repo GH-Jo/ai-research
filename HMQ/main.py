@@ -15,7 +15,7 @@ from quantization_common.quantization_instrumentation import model_coefficient_s
 
 from training.final_stage import final_stage_training
 from training.search_stage import single_iteration_training_joint
-import networks.blocks._initialize as init_net
+from networks.blocks import _initialize as init_net
 
 from apex import amp
 
@@ -131,6 +131,7 @@ def base_runner():
         cc.get('n_thresholds_shifts')), quantization_part=QUANTIZATION[cc.get('quantization_part')],
         ste=cc.get('gumbel_ste'))
     net = networks.get_network_function(cc.get('network_name'))(nc, pretrained=True)
+    
     init_net(net, train_loader)
 
     net = update_quantization_coefficient(net)
@@ -156,8 +157,8 @@ def base_runner():
     ##################################
     # Inital accuracy evalution
     ##################################
-    test_base_acc = common.accuracy_evaluation(net, test_loader, working_device)
-    print("Network Weight Loading Done with Accuracy:", test_base_acc)
+    #test_base_acc = common.accuracy_evaluation(net, test_loader, working_device)
+    #print("Network Weight Loading Done with Accuracy:", test_base_acc)
     print('-' * 100)
     ######################################
     # Enable Quantization
@@ -169,9 +170,10 @@ def base_runner():
     print("Initial thresholds", get_thresholds_list(nc, net)[0])
     nc.set_temperature(1)
     nc.enable_statistics_update()  # enable statistics collection
-    train_acc = common.accuracy_evaluation(net, train_loader, working_device)
+    #train_acc = common.accuracy_evaluation(net, train_loader, working_device)
+    train_acc = common.accuracy_evaluation(net, test_loader, working_device)
     nc.disable_statistics_update()  # disable statistics collection
-    print("Initial Thresholds at the end of statistics update", get_thresholds_list(nc, net)[0], train_acc)
+    #print("Initial Thresholds at the end of statistics update", get_thresholds_list(nc, net)[0], train_acc)
     #####################################
     # Retrain
     #####################################

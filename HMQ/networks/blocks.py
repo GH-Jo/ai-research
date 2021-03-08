@@ -4,7 +4,8 @@ from torch.nn import functional as F
 from torch.distributions.uniform import Uniform
 from networks.layers.non_linear import NonLinear, NonLinearType
 from networks.layers.conv_bn import ConvBN
-
+from datasets.data_prefercher import DataPreFetcher
+from networks.layers.fully_connected import FullyConnected
 
 class DropConnect(nn.Module):
     def __init__(self, survival_prob):
@@ -213,8 +214,8 @@ class RepeatedInvertedResidual(nn.Module):
 
 def _initialize(model, loader):
     def initialize_hook(module, input, output):
-        if isinstance(module, ConvBN):
-            module.set_computation(output)
+        if isinstance(module, (ConvBN, FullyConnected)):
+            module.set_computation(input)
 
     hooks = []
     for name, module in model.named_modules():
@@ -222,10 +223,12 @@ def _initialize(model, loader):
         hooks.append(hook)
 
     model.train()
-    for i, (input, target) in enumerate(loader):
-        with torch.no_grad():
-            output = model(input.cuda())
-        break
+    model.cpu()
+    prefetcher = DataPreFetcher(loader)
+    image, label = prefetcher.next()
+    with torch.no_grad():
+        output = model(image.cpu())
+    model.cuda()
         
     for hook in hooks:
         hook.remove()

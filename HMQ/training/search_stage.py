@@ -10,6 +10,7 @@ from quantization_common.quantization_information import calculate_weight_compre
     calculate_activation_max_compression
 from quantization_common.quantization_activation import update_network_activation
 from training.training_functions import batch_loop
+import networks.layers as layers
 
 
 def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, optimizers, loss, temp_func,
@@ -43,10 +44,10 @@ def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, opti
         gamma_target = gamma_target_func(e)
 
         update_network_activation(nc, net, gamma_target_func_activation(e))
-        for n, m in model.named_modules():
-            if isinstance(m, layer.Quantization):
-                print(m.bits_vector)
-        exit()
+        #for n, m in net.named_modules():
+        #    if isinstance(m, layers.Quantization):
+        #        print(f"{n}  //  {m.bits_vector.tolist()}")
+        #exit()
         s = time.time()
 
         if e == 0:  # Measure Inital accuracy
