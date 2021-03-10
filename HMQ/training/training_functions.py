@@ -2,13 +2,13 @@ import common
 import torch
 
 from tqdm import tqdm
-from apex import amp
+from torch.cuda import amp
 from quantization_common.quantization_information import calculate_expected_weight_compression, calculate_expected_bitops_compression
 from datasets.data_prefercher import DataPreFetcher
 
 
 def batch_step(pbar, net, image, optimizers, label, criterion, gamma, gamma_target, gamma_rate, amp_flag,
-               working_device):
+               working_device, scaler=None):
     """
     This function execute a batch step
     :param pbar: Progress bar object
@@ -27,28 +27,37 @@ def batch_step(pbar, net, image, optimizers, label, criterion, gamma, gamma_targ
     pbar.update(1)
     image = image.to(working_device)
     label = label.to(working_device)
-    prediction = net(image)  # forward
-    correct, total = common.accuracy_factor(prediction,
-                                            label)  # calculate accuracy factor # of correct examples
-    l = criterion(prediction, label)  # loss function
-    #r = calculate_expected_weight_compression(net)
-    r = calculate_expected_bitops_compression(net)
-    if gamma > 0.0:
-        l = l + gamma * torch.pow(torch.relu((gamma_target - r) / gamma_target), gamma_rate)
-
     if amp_flag:
-        with amp.scale_loss(l, optimizers) as scaled_loss:
-            scaled_loss.backward()
+        with amp.autocast():
+            prediction = net(image)  # forward
+            correct, total = common.accuracy_factor(prediction,
+                                                    label)  # calculate accuracy factor # of correct examples
+            l = criterion(prediction, label)  # loss function
+            #r = calculate_expected_weight_compression(net)
+            r = calculate_expected_bitops_compression(net)
+            if gamma > 0.0:
+                l = l + gamma * torch.pow(torch.relu((gamma_target - r) / gamma_target), gamma_rate)
+            scaler.scale(l).backward()
+            [scaler.step(op) for op in optimizers]
+            [op.zero_grad() for op in optimizers]
+            scaler.update()
     else:
+        prediction = net(image)  # forward
+        correct, total = common.accuracy_factor(prediction,
+                                                label)  # calculate accuracy factor # of correct examples
+        l = criterion(prediction, label)  # loss function
+        #r = calculate_expected_weight_compression(net)
+        r = calculate_expected_bitops_compression(net)
+        if gamma > 0.0:
+            l = l + gamma * torch.pow(torch.relu((gamma_target - r) / gamma_target), gamma_rate)
         l.backward()
-    [op.step() for op in optimizers]  # optimize all params
-
-    [op.zero_grad() for op in optimizers]  # optimize all params
+        [op.step() for op in optimizers]  # optimize all params
+        [op.zero_grad() for op in optimizers]  # optimize all params
     return correct, total, l.item()
 
 
 def batch_loop(net, nc, optimizers, train_loader, working_device, criterion, amp_flag, gamma, gamma_rate,
-               temp_func=None, gamma_target=0.0, epoch=0):
+               temp_func=None, gamma_target=0.0, epoch=0, scaler=None):
     """
 
     :param net: Input network module
@@ -70,7 +79,9 @@ def batch_loop(net, nc, optimizers, train_loader, working_device, criterion, amp
     t = None
     loss_meter = common.AverageMeter()
     accuracy_meter = common.AverageMeter()
-
+    #################### DEBUGGING LINE ###################
+    #with tqdm(total=2) as pbar:
+    ##################################################
     with tqdm(total=n) as pbar:
         prefetcher = DataPreFetcher(train_loader)
         image, label = prefetcher.next()
@@ -80,10 +91,13 @@ def batch_loop(net, nc, optimizers, train_loader, working_device, criterion, amp
                 nc.set_temperature(t)
             correct, total, loss_value = batch_step(pbar, net, image, optimizers, label, criterion, gamma,
                                                     gamma_target,
-                                                    gamma_rate, amp_flag, working_device)
+                                                    gamma_rate, amp_flag, working_device, scaler)
             loss_meter.update(loss_value)
             accuracy_meter.update(correct, n=total)
             i += 1
+            ##### DEBUG (START) ########
+            #if i > 1: break
+            ##### DEBUG (END) ##########
             image, label = prefetcher.next()
     torch.cuda.synchronize()
     return loss_meter.avg, 100 * accuracy_meter.avg, t

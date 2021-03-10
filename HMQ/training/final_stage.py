@@ -12,7 +12,7 @@ from training.training_functions import batch_loop
 
 
 def final_stage_training(net, cc, nc, train_loader, test_loader, optimizers, criterion,
-                         working_device, amp_flag, train_sampler):
+                         working_device, amp_flag, train_sampler, scaler=None):
     """
     The final stage training function:
         Loop epoch:
@@ -42,7 +42,7 @@ def final_stage_training(net, cc, nc, train_loader, test_loader, optimizers, cri
 
         loss_value, train_acc, t = batch_loop(net, nc, optimizers, train_loader, working_device, criterion, amp_flag,
                                               gamma=0,
-                                              gamma_rate=1, temp_func=None, gamma_target=1)
+                                              gamma_rate=1, temp_func=None, gamma_target=1, scaler=scaler)
         print("Start Validation Run")
         val_acc = common.accuracy_evaluation(net, test_loader, working_device)
         if cc.get('local_rank') == 0:

@@ -29,7 +29,7 @@ def accuracy_evaluation(input_net, dataset_loader, working_device):
     total_acc = 0
     prefetcher = DataPreFetcher(dataset_loader)
     image, label = prefetcher.next()
-    #i = 0
+    i = 0
     with tqdm(total=len(dataset_loader)) as pbar:
         #################### DEBUGGING LINE ###################
         #with tqdm(total=2) as pbar:
@@ -46,6 +46,10 @@ def accuracy_evaluation(input_net, dataset_loader, working_device):
             correct, total = accuracy_factor(prediction, label)
             correct_acc += correct
             total_acc += total
+            i += 1 
+            ##### DEBUG (START) ########
+            #if i > 1: break
+            ##### DEBUG (END) ##########
             image, label = prefetcher.next()
-            #i += 1 
+            
     return 100 * correct_acc / total_acc

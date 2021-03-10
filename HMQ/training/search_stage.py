@@ -11,12 +11,13 @@ from quantization_common.quantization_information import calculate_weight_compre
 from quantization_common.quantization_activation import update_network_activation
 from training.training_functions import batch_loop
 import networks.layers as layers
+from torch.cuda import amp
 
 
 def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, optimizers, loss, temp_func,
                                     gamma, gamma_target_func,
                                     gamma_target_func_activation,
-                                    working_device, amp_flag=False, train_sampler=None, gamma_rate=2.0):
+                                    working_device, amp_flag=False, train_sampler=None, gamma_rate=2.0, scaler=None):
     """
     The joint training of HMQ parameters and network parameters
     :param net: Input network module
@@ -38,6 +39,8 @@ def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, opti
     """
     print("Start Search Training Stage")
     pb = PartoBest()
+    
+
     for e in range(cc.get('n_epochs')):
         if amp_flag and train_sampler is not None:
             train_sampler.set_epoch(e)
@@ -68,7 +71,7 @@ def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, opti
         loss_value, train_acc, temp = batch_loop(net, nc, optimizers, train_loader, working_device, loss, amp_flag,
                                                  gamma, gamma_rate,
                                                  temp_func,
-                                                 gamma_target=gamma_target, epoch=e)
+                                                 gamma_target=gamma_target, epoch=e, scaler=scaler)
         print("Start Validation Run")
 
         val_acc = common.accuracy_evaluation(net, test_loader, working_device)

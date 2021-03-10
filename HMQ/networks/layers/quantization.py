@@ -32,7 +32,7 @@ class Quantization(nn.Module):
 
         self.network_controller = network_controller
         self.alpha = alpha
-        self.is_signed_tensor = torch.Tensor([float(is_signed)]).cuda()
+        self.is_signed_tensor = Parameter(torch.Tensor([float(is_signed)]), requires_grad=False)
 
         if efficient:
             self.base_q = EfficientBaseQuantization()
@@ -140,6 +140,12 @@ class Quantization(nn.Module):
         else:  # negative temperature/ infernce
             p = self._get_quantization_probability_matrix(batch_size=1, noise_disable=True).squeeze(dim=0)
             bits_index = torch.argmax(self._get_bits_probability(batch_size=1, noise_disable=True).squeeze(dim=0))
+            #print('\n')
+            #rint(bits_index.size())
+            #print(bits_index.device)
+            #print(p.device)
+            #print(self.nb_shifts_points_div.device)
+            #print('\n')
             max_index = torch.argmax(p[:, bits_index, :, 0], dim=-1)
             q_points = self.nb_shifts_points_div[bits_index] * torch.pow(2.0,
                                                                          -self.is_signed_tensor)

@@ -21,8 +21,9 @@ def multiple_gpu_enable(input_net, apex=False):
     """
     if torch.cuda.is_available():
         if apex:
-            from apex.parallel import DistributedDataParallel as DDP
-            net = DDP(input_net, delay_allreduce=True)
+            from torch.nn.parallel import DistributedDataParallel as DDP
+            #from apex.parallel import DistributedDataParallel as DDP
+            net = DDP(input_net, find_unused_parameters=True)
         else:
             net = torch.nn.DataParallel(input_net).cuda()
     else:

@@ -11,6 +11,7 @@ def get_step_annealing(cycle_size: int, start: int, stop: int, n_steps: int):
     :return: a function which get an index and return a floating temperature value
     """
     cr_array_act = np.linspace(start, stop, n_steps)
+    print(cr_array_act)
 
     def func(i):
         if i < 0:

@@ -17,7 +17,7 @@ from training.final_stage import final_stage_training
 from training.search_stage import single_iteration_training_joint
 from networks.blocks import _initialize as init_net
 
-from apex import amp
+from torch.cuda import amp
 
 CR_START = 4
 PROJECT_NAME = 'HMQ'
@@ -145,14 +145,13 @@ def base_runner():
     optimizer_net = RAdam(
         [{'params': param_out_list, 'lr': cc.get('lr_start'), 'weight_decay': cc.get('weight_decay')}])
     net = net.to('cuda')
-    if cc.get('fp16'):
-        net, optimizers = amp.initialize(net, [optimizer, optimizer_net],
-                                         opt_level='O1',
-                                         keep_batchnorm_fp32=None,
-                                         loss_scale=None
-                                         )
-    else:
-        optimizers = [optimizer, optimizer_net]
+    #if cc.get('fp16'):
+    #    net, optimizers = amp.initialize(net, [optimizer, optimizer_net],
+    #                                     opt_level='O1',
+    #                                     keep_batchnorm_fp32=None,
+    #                                     loss_scale=None
+    #                                     )
+    optimizers = [optimizer, optimizer_net]
     net = common.multiple_gpu_enable(net, apex=cc.get('fp16'))
     ##################################
     # Inital accuracy evalution
@@ -185,13 +184,16 @@ def base_runner():
                                                              cc.get('n_target_steps'))
     print("-" * 100)
     print("Starting Training")
+
+    scaler = torch.cuda.amp.GradScaler()
+
     single_iteration_training_joint(net, cc, nc, train_loader, test_loader, optimizers, loss, temp_func,
                                     cc.get('gamma'), gamma_target_func,
                                     gamma_target_func_activation,
                                     working_device, amp_flag=cc.get('fp16'), train_sampler=train_sampler,
-                                    gamma_rate=cc.get('gamma_rate'))
+                                    gamma_rate=cc.get('gamma_rate'), scaler=scaler)
     final_stage_training(net, cc, nc, train_loader, test_loader, [optimizers[1]], loss,
-                         working_device, cc.get('fp16'), train_sampler)
+                         working_device, cc.get('fp16'), train_sampler, scaler=scaler)
 
 
 if __name__ == '__main__':
