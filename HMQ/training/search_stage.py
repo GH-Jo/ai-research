@@ -7,7 +7,7 @@ import os
 from common.parto_best import PartoBest
 
 from quantization_common.quantization_information import calculate_weight_compression, \
-    calculate_activation_max_compression
+    calculate_activation_max_compression, calculate_expected_bitops_compression
 from quantization_common.quantization_activation import update_network_activation
 from training.training_functions import batch_loop
 import networks.layers as layers
@@ -55,7 +55,8 @@ def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, opti
             val_acc = common.accuracy_evaluation(net, test_loader, working_device)
             train_acc = common.accuracy_evaluation(net, train_loader, working_device)
             if cc.get('local_rank') == 0:
-                wc = calculate_weight_compression(net)
+                #wc = calculate_weight_compression(net)
+                wc = calculate_expected_bitops_compression(net)
                 ac = calculate_activation_max_compression(net)
                 lr = optimizers[0].param_groups[0]['lr']
                 wandb.log(
@@ -77,9 +78,10 @@ def single_iteration_training_joint(net, cc, nc, train_loader, test_loader, opti
         val_acc = common.accuracy_evaluation(net, test_loader, working_device)
 
         if cc.get('local_rank') == 0:
-            lr = optimizers[0].param_groups[0]['lr']
-            wc = calculate_weight_compression(net)
+            #wc = calculate_weight_compression(net)
+            wc = calculate_expected_bitops_compression(net)
             ac = calculate_activation_max_compression(net)
+            lr = optimizers[0].param_groups[0]['lr']
             wandb.log(
                 {'Loss': loss_value, 'Validation Accuracy': val_acc, 'Training Accuracy': train_acc,
                  'Compression Rate': wc,
