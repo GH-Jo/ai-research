@@ -19,7 +19,8 @@ from networks.blocks import _initialize as init_net
 
 from torch.cuda import amp
 
-CR_START = 4
+CR_START_W = 16
+CR_START_A = 4
 PROJECT_NAME = 'HMQ'
 
 
@@ -177,9 +178,9 @@ def base_runner():
     #####################################
     temp_func = common.get_exp_cycle_annealing(cc.get('cycle_size') * len(train_loader), cc.get('temp_step'),
                                                np.round(len(train_loader) / cc.get('n_gumbel')))
-    gamma_target_func = common.get_step_annealing(cc.get('cycle_size'), CR_START, cc.get('target_compression'),
+    gamma_target_func = common.get_step_annealing(cc.get('cycle_size'), CR_START_W, cc.get('target_compression'),
                                                   cc.get('n_target_steps'))
-    gamma_target_func_activation = common.get_step_annealing(cc.get('cycle_size'), CR_START,
+    gamma_target_func_activation = common.get_step_annealing(cc.get('cycle_size'), CR_START_A,
                                                              cc.get('target_compression_activation'),
                                                              cc.get('n_target_steps'))
     print("-" * 100)
